@@ -68,9 +68,11 @@ window.Enemies = class {
 
   removeDead() {
     for (let i = this.alive.length - 1; i >= 0; i--) {
-      if (this.alive[i].hp <= 0) {
-        this.damageCooldowns.delete(this.alive[i]);
-        this.scene.remove(this.alive[i].mesh);
+      const e = this.alive[i];
+      const hp = e.mesh.userData.enemyData ? e.mesh.userData.enemyData.hp : e.hp;
+      if (hp <= 0) {
+        this.damageCooldowns.delete(e);
+        this.scene.remove(e.mesh);
         this.alive.splice(i, 1);
       }
     }

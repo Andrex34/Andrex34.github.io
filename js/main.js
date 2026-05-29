@@ -23,18 +23,18 @@ let pendingChoice = false;
 let gameState = 'menu';
 let paused = false;
 
-const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight',' ','Enter'];
+const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','Space','Enter'];
 let konamiIdx = 0;
 
 document.addEventListener('keydown', (e) => {
-  if (gameState === 'playing' && e.key === 'p' && !hud.gameOverVisible && !document.getElementById('cheat-menu').classList.contains('hidden')) return;
-  if (gameState === 'playing' && e.key === 'p' && !hud.gameOverVisible) {
+  if (gameState === 'playing' && e.code === 'KeyP' && !hud.gameOverVisible && !document.getElementById('cheat-menu').classList.contains('hidden')) return;
+  if (gameState === 'playing' && e.code === 'KeyP' && !hud.gameOverVisible) {
     paused = !paused;
     document.getElementById('pause-overlay').classList.toggle('hidden', !paused);
     return;
   }
   if (gameState !== 'playing' || paused) return;
-  if (e.key === konamiSeq[konamiIdx]) {
+  if (e.code === konamiSeq[konamiIdx]) {
     konamiIdx++;
     if (konamiIdx === konamiSeq.length) {
       konamiIdx = 0;

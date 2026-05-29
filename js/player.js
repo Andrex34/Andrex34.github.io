@@ -11,8 +11,9 @@ window.Player = class {
     this.buildMesh(type || 'cube');
     scene.add(this.mesh);
 
-    document.addEventListener('keydown', (e) => { if (e.key in this.keys) this.keys[e.key] = true; });
-    document.addEventListener('keyup', (e) => { if (e.key in this.keys) this.keys[e.key] = false; });
+    const keyMap = { KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd' };
+    document.addEventListener('keydown', (e) => { const k = keyMap[e.code]; if (k) this.keys[k] = true; });
+    document.addEventListener('keyup', (e) => { const k = keyMap[e.code]; if (k) this.keys[k] = false; });
   }
 
   get speed() { return this.baseSpeed * this.speedMultiplier; }
