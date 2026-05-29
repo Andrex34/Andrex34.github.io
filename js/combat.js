@@ -1,8 +1,10 @@
 window.Combat = class {
-  constructor(scene, player, enemies) {
+  constructor(scene, player, enemies, cursorTarget) {
     this.scene = scene;
     this.player = player;
     this.enemies = enemies;
+    this.cursorTarget = cursorTarget;
+    this.aimMode = 'auto';
     this.projectiles = [];
     this.attackCooldown = 0;
     this.attackRate = 0.4;
@@ -17,38 +19,71 @@ window.Combat = class {
     this.attackCooldown -= dt;
 
     if (this.attackCooldown <= 0 && this.enemies.alive.length > 0) {
-      const closest = this.enemies.alive.reduce((a, b) => {
-        const da = a.mesh.position.distanceTo(this.player.mesh.position);
-        const db = b.mesh.position.distanceTo(this.player.mesh.position);
-        return da < db ? a : b;
-      });
-      if (closest.mesh.position.distanceTo(this.player.mesh.position) <= this.range) {
-        this.fire(closest);
-        this.attackCooldown = this.attackRate;
+      if (this.aimMode === 'auto') {
+        const closest = this.enemies.alive.reduce((a, b) => {
+          const da = a.mesh.position.distanceTo(this.player.mesh.position);
+          const db = b.mesh.position.distanceTo(this.player.mesh.position);
+          return da < db ? a : b;
+        });
+        if (closest.mesh.position.distanceTo(this.player.mesh.position) <= this.range) {
+          this.fire(closest.mesh);
+          this.attackCooldown = this.attackRate;
+        }
+      } else {
+        const dist = this.cursorTarget.distanceTo(this.player.mesh.position);
+        if (dist > 0.5) {
+          this.fire(null);
+          this.attackCooldown = this.attackRate;
+        }
       }
     }
 
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
       p.mesh.position.add(p.velocity.clone().multiplyScalar(dt));
+      p.traveled += p.velocity.length() * dt;
 
-      if (!p.target.parent) {
+      if (p.traveled >= this.range) {
         this.scene.remove(p.mesh);
         this.projectiles.splice(i, 1);
         continue;
       }
-      const hitRadius = p.target.userData.enemyData && p.target.userData.enemyData.isBoss ? 1.2 : 0.8;
-      if (p.mesh.position.distanceTo(p.target.position) < hitRadius) {
-        const data = p.target.userData.enemyData;
-        if (data) data.hp -= this.damage;
-        this.scene.remove(p.mesh);
-        this.projectiles.splice(i, 1);
-        if (data && data.hp <= 0) onKill();
+
+      if (p.target) {
+        if (!p.target.parent) {
+          this.scene.remove(p.mesh);
+          this.projectiles.splice(i, 1);
+          continue;
+        }
+        const hitRadius = p.target.userData.enemyData && p.target.userData.enemyData.isBoss ? 1.2 : 0.8;
+        if (p.mesh.position.distanceTo(p.target.position) < hitRadius) {
+          const data = p.target.userData.enemyData;
+          if (data) data.hp -= this.damage;
+          this.scene.remove(p.mesh);
+          this.projectiles.splice(i, 1);
+          if (data && data.hp <= 0) onKill();
+        }
+      } else {
+        let hit = false;
+        for (const e of this.enemies.alive) {
+          const hitRadius = e.isBoss ? 1.2 : 0.8;
+          if (p.mesh.position.distanceTo(e.mesh.position) < hitRadius) {
+            const data = e.mesh.userData.enemyData;
+            if (data) data.hp -= this.damage;
+            hit = true;
+            if (data && data.hp <= 0) onKill();
+            break;
+          }
+        }
+        if (hit) {
+          this.scene.remove(p.mesh);
+          this.projectiles.splice(i, 1);
+        }
       }
     }
   }
 
-  fire(enemy) {
+  fire(targetMesh) {
     const geo = new THREE.SphereGeometry(0.12, 6, 6);
     const mat = new THREE.MeshBasicMaterial({ color: 0x88ddff });
     const mesh = new THREE.Mesh(geo, mat);
@@ -56,8 +91,15 @@ window.Combat = class {
     mesh.position.y = 0.5;
     this.scene.add(mesh);
 
-    const dir = new THREE.Vector3().copy(enemy.mesh.position).sub(mesh.position).normalize();
-    this.projectiles.push({ mesh, velocity: dir.multiplyScalar(12), target: enemy.mesh });
+    let dir;
+    if (targetMesh) {
+      dir = new THREE.Vector3().copy(targetMesh.position).sub(mesh.position).normalize();
+    } else {
+      dir = new THREE.Vector3().copy(this.cursorTarget).sub(mesh.position);
+      dir.y = 0;
+      dir.normalize();
+    }
+    this.projectiles.push({ mesh, velocity: dir.multiplyScalar(12), target: targetMesh || null, traveled: 0 });
   }
 
   reset() {

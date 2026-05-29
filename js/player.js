@@ -40,12 +40,26 @@ window.Player = class {
     this.meshType = type;
   }
 
-  update(dt, arenaSize) {
+  update(dt, arenaSize, camera, cameraMode) {
     const dir = new THREE.Vector3();
-    if (this.keys.w) dir.z -= 1;
-    if (this.keys.s) dir.z += 1;
-    if (this.keys.a) dir.x -= 1;
-    if (this.keys.d) dir.x += 1;
+    if (this.keys.w || this.keys.s || this.keys.a || this.keys.d) {
+      const forward = new THREE.Vector3();
+      const right = new THREE.Vector3();
+      if (cameraMode === 'thirdperson') {
+        camera.getWorldDirection(forward);
+        forward.y = 0;
+        if (forward.length() < 0.001) forward.z = -1;
+        forward.normalize();
+        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+      } else {
+        forward.set(0, 0, -1);
+        right.set(1, 0, 0);
+      }
+      if (this.keys.w) dir.add(forward);
+      if (this.keys.s) dir.sub(forward);
+      if (this.keys.a) dir.sub(right);
+      if (this.keys.d) dir.add(right);
+    }
     if (dir.length() > 0) {
       dir.normalize();
       this.mesh.position.x += dir.x * this.speed * dt;

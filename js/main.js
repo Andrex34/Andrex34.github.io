@@ -7,11 +7,34 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.getElementById('game-container').prepend(renderer.domElement);
 
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const cursorTarget = new THREE.Vector3();
+
+document.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  raycaster.ray.intersectPlane(groundPlane, cursorTarget);
+
+  if (cameraMode === 'thirdperson') {
+    camTheta -= e.movementX * 0.005;
+    camPhi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, camPhi + e.movementY * 0.005));
+  }
+});
+
+document.addEventListener('wheel', (e) => {
+  if (cameraMode === 'thirdperson') {
+    camRadius = Math.max(3, Math.min(25, camRadius + e.deltaY * 0.01));
+  }
+});
+
 const hud = new Hud();
 const arena = new Arena(scene);
 const player = new Player(scene);
 const enemies = new Enemies(scene);
-const combat = new Combat(scene, player, enemies);
+const combat = new Combat(scene, player, enemies, cursorTarget);
 const upgrades = new Upgrades();
 const locations = new Locations();
 
@@ -22,6 +45,10 @@ let kills = 0;
 let pendingChoice = false;
 let gameState = 'menu';
 let paused = false;
+let cameraMode = 'topdown';
+let camTheta = 0;
+let camPhi = Math.PI / 4;
+let camRadius = 10;
 
 const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','Space','Enter'];
 let konamiIdx = 0;
@@ -31,6 +58,7 @@ document.addEventListener('keydown', (e) => {
   if (gameState === 'playing' && e.code === 'KeyP' && !hud.gameOverVisible) {
     paused = !paused;
     document.getElementById('pause-overlay').classList.toggle('hidden', !paused);
+    updateCursor();
     return;
   }
   if (gameState !== 'playing' || paused) return;
@@ -44,6 +72,17 @@ document.addEventListener('keydown', (e) => {
     konamiIdx = 0;
   }
 });
+
+function updateCursor() {
+  if (cameraMode === 'thirdperson' && gameState === 'playing' && !hud.gameOverVisible && !paused) {
+    const modalsHidden = ['upgrade-modal', 'location-modal', 'cheat-menu'].every(
+      id => document.getElementById(id).classList.contains('hidden')
+    );
+    document.body.style.cursor = modalsHidden ? 'none' : 'default';
+  } else {
+    document.body.style.cursor = 'default';
+  }
+}
 
 function startGame() {
   gameState = 'playing';
@@ -112,6 +151,17 @@ function restart() {
   nextWave();
 }
 
+document.getElementById('aim-toggle').addEventListener('change', (e) => {
+  combat.aimMode = e.target.checked ? 'cursor' : 'auto';
+  document.getElementById('aim-label').textContent = combat.aimMode === 'auto' ? 'Aim: Auto' : 'Aim: Cursor';
+});
+
+document.getElementById('camera-toggle').addEventListener('change', (e) => {
+  cameraMode = e.target.checked ? 'thirdperson' : 'topdown';
+  updateCursor();
+  document.getElementById('camera-label').textContent = cameraMode === 'topdown' ? 'Camera: Top-down' : 'Camera: 3rd Person';
+});
+
 document.getElementById('play-btn').addEventListener('click', startGame);
 
 document.getElementById('char-btn').addEventListener('click', () => {
@@ -146,6 +196,7 @@ document.getElementById('cheat-speed').addEventListener('change', (e) => {
 
 document.getElementById('cheat-close-btn').addEventListener('click', () => {
   document.getElementById('cheat-menu').classList.add('hidden');
+  updateCursor();
 });
 
 document.getElementById('restart-btn').addEventListener('click', restart);
@@ -157,7 +208,7 @@ function animate() {
   const dt = Math.min(clock.getDelta(), 0.05);
 
   if (gameState === 'playing' && !hud.gameOverVisible && !paused) {
-    player.update(dt, arena.size);
+    player.update(dt, arena.size, camera, cameraMode);
     enemies.update(dt, player.mesh.position, player);
     combat.update(dt, () => { kills++; hud.setKills(kills); });
     hud.setHp(player.hp, player.maxHp);
@@ -165,11 +216,18 @@ function animate() {
     checkWaveComplete();
   }
 
-  const camDist = 10;
-  const camHeight = 8;
+  updateCursor();
+
   const p = player.mesh.position;
-  camera.position.set(p.x, p.y + camHeight, p.z + camDist);
-  camera.lookAt(p.x, 0, p.z);
+  if (cameraMode === 'thirdperson') {
+    camera.position.x = p.x + camRadius * Math.sin(camTheta) * Math.cos(camPhi);
+    camera.position.y = p.y + camRadius * Math.sin(camPhi);
+    camera.position.z = p.z + camRadius * Math.cos(camTheta) * Math.cos(camPhi);
+    camera.lookAt(p.x, 0.5, p.z);
+  } else {
+    camera.position.set(p.x, p.y + 8, p.z + 10);
+    camera.lookAt(p.x, 0, p.z);
+  }
 
   renderer.render(scene, camera);
 }
