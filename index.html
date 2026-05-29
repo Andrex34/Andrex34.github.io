@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arena Rogue</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="game-container">
+    <div id="hud">
+      <div id="hp-bar"><span id="hp-text">100</span></div>
+      <div id="wave-info">Wave <span id="wave-count">0</span></div>
+      <div id="kill-count">Kills: <span id="kills">0</span></div>
+    </div>
+    <div id="overlay" class="hidden"></div>
+    <div id="upgrade-modal" class="modal hidden">
+      <h2>Choose an upgrade</h2>
+      <div id="upgrade-cards"></div>
+    </div>
+    <div id="location-modal" class="modal hidden">
+      <h2>Choose next location</h2>
+      <div id="location-cards"></div>
+    </div>
+    <div id="gameover-modal" class="modal hidden">
+      <h2>Game Over</h2>
+      <p>Wave <span id="final-wave">0</span></p>
+      <p>Kills: <span id="final-kills">0</span></p>
+      <button id="restart-btn">Restart</button>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/arena.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/enemies.js"></script>
+  <script src="js/combat.js"></script>
+  <script src="js/upgrades.js"></script>
+  <script src="js/locations.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
