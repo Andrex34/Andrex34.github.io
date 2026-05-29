@@ -6,9 +6,12 @@ window.Combat = class {
     this.projectiles = [];
     this.attackCooldown = 0;
     this.attackRate = 0.4;
-    this.damage = 10;
+    this.baseDamage = 10;
     this.range = 12;
+    this.damageMultiplier = 1;
   }
+
+  get damage() { return this.baseDamage * this.damageMultiplier; }
 
   update(dt, onKill) {
     this.attackCooldown -= dt;
@@ -34,7 +37,8 @@ window.Combat = class {
         this.projectiles.splice(i, 1);
         continue;
       }
-      if (p.mesh.position.distanceTo(p.target.position) < 0.6) {
+      const hitRadius = p.target.userData.enemyData && p.target.userData.enemyData.isBoss ? 1.2 : 0.8;
+      if (p.mesh.position.distanceTo(p.target.position) < hitRadius) {
         const data = p.target.userData.enemyData;
         if (data) data.hp -= this.damage;
         this.scene.remove(p.mesh);

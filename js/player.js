@@ -1,19 +1,42 @@
 window.Player = class {
-  constructor(scene) {
+  constructor(scene, type) {
+    this.scene = scene;
     this.hp = 100;
     this.maxHp = 100;
-    this.speed = 6;
+    this.baseSpeed = 6;
+    this.speedMultiplier = 1;
     this.keys = { w: false, a: false, s: false, d: false };
-
-    const geo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x44ddff });
-    this.mesh = new THREE.Mesh(geo, mat);
-    this.mesh.position.y = 0.35;
-    this.mesh.castShadow = true;
+    this.immortal = false;
+    this.mesh = null;
+    this.buildMesh(type || 'cube');
     scene.add(this.mesh);
 
     document.addEventListener('keydown', (e) => { if (e.key in this.keys) this.keys[e.key] = true; });
     document.addEventListener('keyup', (e) => { if (e.key in this.keys) this.keys[e.key] = false; });
+  }
+
+  get speed() { return this.baseSpeed * this.speedMultiplier; }
+
+  buildMesh(type) {
+    if (this.mesh) {
+      this.scene.remove(this.mesh);
+      if (this.mesh.geometry) this.mesh.geometry.dispose();
+      if (this.mesh.material) this.mesh.material.dispose();
+    }
+    let geo, yPos;
+    if (type === 'sphere') {
+      geo = new THREE.SphereGeometry(0.4, 16, 16);
+      yPos = 0.4;
+    } else {
+      geo = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+      yPos = 0.35;
+    }
+    const mat = new THREE.MeshStandardMaterial({ color: type === 'sphere' ? 0xff8844 : 0x44ddff });
+    this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh.position.y = yPos;
+    this.mesh.castShadow = true;
+    this.scene.add(this.mesh);
+    this.meshType = type;
   }
 
   update(dt, arenaSize) {
@@ -34,12 +57,13 @@ window.Player = class {
   }
 
   takeDamage(dmg) {
+    if (this.immortal) return;
     this.hp = Math.max(0, this.hp - dmg);
   }
 
   reset() {
     this.hp = this.maxHp;
-    this.mesh.position.set(0, 0.35, 0);
+    this.mesh.position.set(0, this.meshType === 'sphere' ? 0.4 : 0.35, 0);
     this.mesh.rotation.y = 0;
   }
 };

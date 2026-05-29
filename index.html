@@ -8,12 +8,57 @@
 </head>
 <body>
   <div id="game-container">
-    <div id="hud">
+    <div id="hud" class="hidden">
       <div id="hp-bar"><span id="hp-text">100</span></div>
       <div id="wave-info">Wave <span id="wave-count">0</span></div>
       <div id="kill-count">Kills: <span id="kills">0</span></div>
     </div>
-    <div id="overlay" class="hidden"></div>
+
+    <div id="main-menu" class="fullscreen-menu">
+      <h1>ARENA ROGUE</h1>
+      <button id="play-btn" class="menu-btn">Play</button>
+      <button id="char-btn" class="menu-btn">Character</button>
+    </div>
+
+    <div id="char-select" class="fullscreen-menu hidden">
+      <h2>Choose your character</h2>
+      <div id="char-cards">
+        <div class="char-card selected" data-char="cube">
+          <div class="char-preview char-cube"></div>
+          <h3>Cube</h3>
+          <p>Balanced warrior</p>
+        </div>
+        <div class="char-card" data-char="sphere">
+          <div class="char-preview char-sphere"></div>
+          <h3>Sphere</h3>
+          <p>Speedy roller</p>
+        </div>
+      </div>
+      <button id="char-back-btn" class="menu-btn menu-btn-sm">Back</button>
+    </div>
+
+    <div id="pause-overlay" class="fullscreen-menu hidden">
+      <h2>PAUSED</h2>
+      <p style="font-size:18px;color:#aaa;">Press P to resume</p>
+    </div>
+
+    <div id="cheat-menu" class="fullscreen-menu hidden">
+      <h2>Cheat Menu</h2>
+      <div class="cheat-option">
+        <span>Immortality</span>
+        <label class="toggle"><input type="checkbox" id="cheat-immortal"><span class="slider"></span></label>
+      </div>
+      <div class="cheat-option">
+        <span>Damage x500</span>
+        <label class="toggle"><input type="checkbox" id="cheat-damage"><span class="slider"></span></label>
+      </div>
+      <div class="cheat-option">
+        <span>Speed Boost</span>
+        <label class="toggle"><input type="checkbox" id="cheat-speed"><span class="slider"></span></label>
+      </div>
+      <button id="cheat-close-btn" class="menu-btn menu-btn-sm">Close</button>
+    </div>
+
     <div id="upgrade-modal" class="modal hidden">
       <h2>Choose an upgrade</h2>
       <div id="upgrade-cards"></div>
