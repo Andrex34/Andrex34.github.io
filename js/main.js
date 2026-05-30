@@ -12,6 +12,11 @@ const mouse = new THREE.Vector2();
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const cursorTarget = new THREE.Vector3();
 
+let cameraMode = 'topdown';
+let camTheta = 0;
+let camPhi = Math.PI / 4;
+let camRadius = 10;
+
 document.addEventListener('mousemove', (e) => {
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -30,9 +35,12 @@ document.addEventListener('wheel', (e) => {
   }
 });
 
+let selectedChar = 'knight';
+
 const hud = new Hud();
 const arena = new Arena(scene);
-const player = new Player(scene);
+const player = new Player(scene, selectedChar);
+window.playerRef = player;
 const enemies = new Enemies(scene);
 const combat = new Combat(scene, player, enemies, cursorTarget);
 const upgrades = new Upgrades();
@@ -45,10 +53,6 @@ let kills = 0;
 let pendingChoice = false;
 let gameState = 'menu';
 let paused = false;
-let cameraMode = 'topdown';
-let camTheta = 0;
-let camPhi = Math.PI / 4;
-let camRadius = 10;
 
 const konamiSeq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','Space','Enter'];
 let konamiIdx = 0;
@@ -116,7 +120,7 @@ function checkWaveComplete() {
         pendingChoice = false;
       });
     } else {
-      upgrades.show(() => {
+      upgrades.show(player, combat, () => {
         nextWave();
         pendingChoice = false;
       });
@@ -164,7 +168,38 @@ document.getElementById('camera-toggle').addEventListener('change', (e) => {
 
 document.getElementById('play-btn').addEventListener('click', startGame);
 
+function buildCharSelect() {
+  const container = document.getElementById('char-cards');
+  container.innerHTML = '';
+  if (window._charsLoading) {
+    container.innerHTML = '<p style="color:#aaa;grid-column:1/-1;">Loading characters...</p>';
+    return;
+  }
+  for (const [key, def] of Object.entries(CHARACTERS)) {
+    const card = document.createElement('div');
+    card.className = 'char-card' + (key === selectedChar ? ' selected' : '');
+    card.dataset.char = key;
+    card.innerHTML = `
+      <div class="char-preview"><div class="char-icon" style="background:${new THREE.Color(def.color).getStyle()}"></div></div>
+      <h3>${def.name}</h3>
+      <p>${def.desc}</p>
+      <div class="char-stats">
+        <span>HP ${def.stats.hp}</span>
+        <span>DMG ${def.stats.damage}</span>
+        <span>SPD ${def.stats.speed}</span>
+      </div>`;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedChar = key;
+      player.setCharacter(key);
+    });
+    container.appendChild(card);
+  }
+}
+
 document.getElementById('char-btn').addEventListener('click', () => {
+  buildCharSelect();
   document.getElementById('main-menu').classList.add('hidden');
   document.getElementById('char-select').classList.remove('hidden');
 });
@@ -172,14 +207,6 @@ document.getElementById('char-btn').addEventListener('click', () => {
 document.getElementById('char-back-btn').addEventListener('click', () => {
   document.getElementById('char-select').classList.add('hidden');
   document.getElementById('main-menu').classList.remove('hidden');
-});
-
-document.querySelectorAll('.char-card').forEach((card) => {
-  card.addEventListener('click', () => {
-    document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-    player.buildMesh(card.dataset.char);
-  });
 });
 
 document.getElementById('cheat-immortal').addEventListener('change', (e) => {
@@ -208,14 +235,15 @@ function animate() {
   const dt = Math.min(clock.getDelta(), 0.05);
 
   if (gameState === 'playing' && !hud.gameOverVisible && !paused) {
-    player.update(dt, arena.size, camera, cameraMode);
-    enemies.update(dt, player.mesh.position, player);
+    player.update(dt, arena, camera, cameraMode);
+    enemies.update(dt, player.mesh.position, player, arena);
     combat.update(dt, () => { kills++; hud.setKills(kills); });
     hud.setHp(player.hp, player.maxHp);
     if (player.hp <= 0) gameOver();
     checkWaveComplete();
   }
 
+  player.updateMixer(dt);
   updateCursor();
 
   const p = player.mesh.position;

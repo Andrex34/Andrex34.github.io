@@ -16,8 +16,8 @@
 
     <div id="main-menu" class="fullscreen-menu">
       <h1>ARENA ROGUE</h1>
-      <button id="play-btn" class="menu-btn">Play</button>
-      <button id="char-btn" class="menu-btn">Character</button>
+      <button id="play-btn" class="menu-btn" disabled>Loading...</button>
+      <button id="char-btn" class="menu-btn" disabled>Character</button>
       <div class="cheat-option" style="margin-top:12px">
         <span id="aim-label">Aim: Auto</span>
         <label class="toggle"><input type="checkbox" id="aim-toggle"><span class="slider"></span></label>
@@ -31,16 +31,6 @@
     <div id="char-select" class="fullscreen-menu hidden">
       <h2>Choose your character</h2>
       <div id="char-cards">
-        <div class="char-card selected" data-char="cube">
-          <div class="char-preview char-cube"></div>
-          <h3>Cube</h3>
-          <p>Balanced warrior</p>
-        </div>
-        <div class="char-card" data-char="sphere">
-          <div class="char-preview char-sphere"></div>
-          <h3>Sphere</h3>
-          <p>Speedy roller</p>
-        </div>
       </div>
       <button id="char-back-btn" class="menu-btn menu-btn-sm">Back</button>
     </div>
@@ -83,8 +73,16 @@
     </div>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
+  <script src="js/models_data.js"></script>
+  <script src="js/anim_data.js"></script>
+  <script src="js/arena_data.js"></script>
+  <script src="js/arena_texture.js"></script>
+  <script src="js/characters.js"></script>
   <script src="js/arena.js"></script>
   <script src="js/player.js"></script>
+  <script src="js/enemy_data.js"></script>
   <script src="js/enemies.js"></script>
   <script src="js/combat.js"></script>
   <script src="js/upgrades.js"></script>

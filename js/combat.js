@@ -7,33 +7,32 @@ window.Combat = class {
     this.aimMode = 'auto';
     this.projectiles = [];
     this.attackCooldown = 0;
-    this.attackRate = 0.4;
-    this.baseDamage = 10;
-    this.range = 12;
     this.damageMultiplier = 1;
   }
 
-  get damage() { return this.baseDamage * this.damageMultiplier; }
+  get damage() { return this.player.damage * this.damageMultiplier; }
 
   update(dt, onKill) {
     this.attackCooldown -= dt;
 
     if (this.attackCooldown <= 0 && this.enemies.alive.length > 0) {
+      const range = this.player.range;
+      const rate = this.player.attackRate;
       if (this.aimMode === 'auto') {
         const closest = this.enemies.alive.reduce((a, b) => {
-          const da = a.mesh.position.distanceTo(this.player.mesh.position);
-          const db = b.mesh.position.distanceTo(this.player.mesh.position);
+          const da = a.model.position.distanceTo(this.player.mesh.position);
+          const db = b.model.position.distanceTo(this.player.mesh.position);
           return da < db ? a : b;
         });
-        if (closest.mesh.position.distanceTo(this.player.mesh.position) <= this.range) {
-          this.fire(closest.mesh);
-          this.attackCooldown = this.attackRate;
+        if (closest.model.position.distanceTo(this.player.mesh.position) <= range) {
+          this.fire(closest.model);
+          this.attackCooldown = rate;
         }
       } else {
         const dist = this.cursorTarget.distanceTo(this.player.mesh.position);
         if (dist > 0.5) {
           this.fire(null);
-          this.attackCooldown = this.attackRate;
+          this.attackCooldown = rate;
         }
       }
     }
@@ -43,7 +42,7 @@ window.Combat = class {
       p.mesh.position.add(p.velocity.clone().multiplyScalar(dt));
       p.traveled += p.velocity.length() * dt;
 
-      if (p.traveled >= this.range) {
+      if (p.traveled >= this.player.range) {
         this.scene.remove(p.mesh);
         this.projectiles.splice(i, 1);
         continue;
@@ -67,8 +66,8 @@ window.Combat = class {
         let hit = false;
         for (const e of this.enemies.alive) {
           const hitRadius = e.isBoss ? 1.2 : 0.8;
-          if (p.mesh.position.distanceTo(e.mesh.position) < hitRadius) {
-            const data = e.mesh.userData.enemyData;
+          if (p.mesh.position.distanceTo(e.model.position) < hitRadius) {
+            const data = e.model.userData.enemyData;
             if (data) data.hp -= this.damage;
             hit = true;
             if (data && data.hp <= 0) onKill();
