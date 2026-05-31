@@ -115,9 +115,12 @@ function checkWaveComplete() {
     if (enemies.hasBoss) {
       levelWave = 0;
       level++;
-      locations.showNonFunctional(() => {
-        nextWave();
-        pendingChoice = false;
+      locations.show((config) => {
+        arena.switchTo(config, () => {
+          player.mesh.position.set(0, 0, 0);
+          nextWave();
+          pendingChoice = false;
+        });
       });
     } else {
       upgrades.show(player, combat, () => {
