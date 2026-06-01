@@ -50,7 +50,6 @@ window.Locations = class {
     return [
       { name: 'Исследовать подземелье', desc: 'Спуститься глубже в тёмные залы', config: { theme: 'dungeon' } },
       { name: 'Пойти в лес', desc: 'Войти в опасную чащу под открытым небом', config: { theme: 'forest' } },
-      { name: 'Пойти на кладбище', desc: 'Туда, где покойники не лежат смирно', config: { theme: 'cemetery' } },
     ];
   }
 };

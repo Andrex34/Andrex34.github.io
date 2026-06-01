@@ -483,19 +483,28 @@ window.Arena = class {
   _buildForestWalls() {
     const half = this.size / 2;
     const treeKeys = ['Tree_1_A_Color1', 'Tree_2_A_Color1', 'Tree_4_A_Color1'];
-    const positions = [];
+    const bushKeys = ['Bush_1_A_Color1', 'Bush_3_A_Color1', 'Bush_4_A_Color1'];
+
     for (let x = -half + 1.5; x < half; x += 3) {
-      positions.push([x, -half, 0]);
-      positions.push([x, half, Math.PI]);
+      this._spawnModel(treeKeys[Math.floor(Math.random() * treeKeys.length)], x, 0, -half, 0, 1.2);
+      this._colliders.push({ x, z: -half, radius: 0.5 });
+      this._spawnModel(treeKeys[Math.floor(Math.random() * treeKeys.length)], x, 0, half, Math.PI, 1.2);
+      this._colliders.push({ x, z: half, radius: 0.5 });
     }
     for (let z = -half + 1.5; z < half; z += 3) {
-      positions.push([-half, z, Math.PI / 2]);
-      positions.push([half, z, -Math.PI / 2]);
+      this._spawnModel(treeKeys[Math.floor(Math.random() * treeKeys.length)], -half, 0, z, Math.PI / 2, 1.2);
+      this._colliders.push({ x: -half, z, radius: 0.5 });
+      this._spawnModel(treeKeys[Math.floor(Math.random() * treeKeys.length)], half, 0, z, -Math.PI / 2, 1.2);
+      this._colliders.push({ x: half, z, radius: 0.5 });
     }
-    for (const [x, z, rot] of positions) {
-      const key = treeKeys[Math.floor(Math.random() * treeKeys.length)];
-      this._spawnModel(key, x, 0, z, rot, 1.2);
-      this._colliders.push({ x, z, radius: 0.5 });
+
+    for (let x = -half + 0.6; x < half; x += 1.2) {
+      this._spawnModel('Bush_3_A_Color1', x, 0, -half, 0, 0.8);
+      this._spawnModel('Bush_3_A_Color1', x, 0, half, Math.PI, 0.8);
+    }
+    for (let z = -half + 0.6; z < half; z += 1.2) {
+      this._spawnModel('Bush_3_A_Color1', -half, 0, z, Math.PI / 2, 0.8);
+      this._spawnModel('Bush_3_A_Color1', half, 0, z, -Math.PI / 2, 0.8);
     }
   }
 
